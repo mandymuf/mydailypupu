@@ -1,60 +1,271 @@
 # mydailypupu
-<!DOCTYPE html>
 <html>
-	<head>
-		<title>Calculator</title>
-		<link rel="stylesheet" type="text/css"href="calculator.css" />
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-		
-		
-	</head>
-<body>
 
+<canvas id="gameCanvas" width="800" height="600"></canvas>
 
- 
-  
-<div class="container">
-	<h2>Calculator</h2>
+	<script>
 	
-    <table>
-        <tr>
-            <td colspan="4" id="display">0</td>
-        </tr>
-        <tr>
-            <td colspan="3"><button onclick="inputBtn(this);" id="clear">C</button></td>
-            <td><button onclick="inputBtn(this);">/</button></td>
-        </tr>
-        <tr>
-            <td><button onclick="inputBtn(this);" class="btn">7</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">8</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">9</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">*</button></td>
-        </tr>
-        <tr>
-            <td><button onclick="inputBtn(this);" class="btn">4</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">5</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">6</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">-</button></td>
-        </tr>
-        <tr>
-            <td><button onclick="inputBtn(this);" class="btn">1</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">2</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">3</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">+</button></td>
-        </tr>
-        <tr>
-            <td><button onclick="inputBtn(this);" class="btn">0</button></td>
-            <td><button onclick="inputBtn(this);" class="btn">.</button></td>
-            <td colspan="2"><button onclick="inputBtn(this);" id="equals">=</button></td>
-        </tr>
-    </table>
+	var canvas;
+	
+	var canvasContext;
+	
+	var ballX = 50;
+	
+	var ballY = 50;
+	
+	var ballSpeedX = 10;
+	
+	var ballSpeedY = 4;
+	
+	var player1score = 0;
+	var player2score = 0;
+	const WINNING_SCORE = 3;
+	
+	var showngWinScreen = false;
+	
+	var paddle1Y = 250;
+	
+	var paddle2Y = 250;
+	
+	const PADDLE_THICKNESS = 10;
+	
+	const PADDLE_HEIGHT = 100;
+	
+	function calculateMousePos(evt) {
+	
+		var rect = canvas.getBoundingClientRect();
+		
+		var root = document.documentElement;
+		
+		var mouseX = evt.clientX - rect.left - root.scrollLeft;
+		
+		var mouseY = evt.clientY - rect.top - root.scrollTop;
+	
+		return {
+		
+			x:mouseX,
+			y:mouseY
+		
+		};
+	}
+	function handleMouseClick(evt) {
+	
+		if (showngWinScreen) {
+		
+			player1score = 0;
+			player2score = 0;
+			showngWinScreen = false;
+		
+		}
+	
+	}
+	
+		window.onload = function() {
+		
+		canvas = document.getElementById("gameCanvas");
+		
+		canvasContext = canvas.getContext("2d");
+		
+		var framesPerSecond = 30;
+		setInterval(function () {
+	
+		moveEverything();
+		drawEverything();
+	}, 1000/framesPerSecond);
+	
+	canvas.addEventListener('mousedown', handleMouseClick);
+				
+	canvas.addEventListener('mousemove', 
+		function(evt) {
+		
+			var mousePos = calculateMousePos(evt);
+			
+			paddle1Y = mousePos.y - (PADDLE_HEIGHT/2);
+		
+		});
+		
+	}
+	
+function ballReset() {
 
-<script type="text/javascript" src="calculator.js"> 
+	if(player1score >= WINNING_SCORE ||
+	   player2score >= WINNING_SCORE) {
+		
+		showngWinScreen = true;
+	   
+	   }
+	
+	ballSpeedX = -ballSpeedX;
+	ballX = canvas.width/2;
+	ballY = canvas.height/2;	
 
-</script>
+}
 
-</div>
+function computerMovement() {
 
-</body>
+	var paddle2YCenter = paddle2Y + (PADDLE_HEIGHT/2);
+
+	if(paddle2Y < ballY - 35) {
+		paddle2Y += 6;
+	
+	} else if(paddle2Y < ballY + 35){
+		paddle2Y -= 6;
+	
+	}
+
+}
+	
+function moveEverything(){
+
+	if(showngWinScreen) {
+		return;
+	
+	}
+
+		computerMovement();
+	
+		ballX += ballSpeedX;
+		ballY += ballSpeedY;
+		
+		if (ballX < 0) {
+		
+		if(ballY > paddle1Y && 
+			ballY < paddle1Y+PADDLE_HEIGHT) {
+			ballSpeedX = -ballSpeedX;
+			
+			var deltaY = ballY
+			
+				-(paddle1Y+PADDLE_HEIGHT/2);
+				
+				ballSpeedY = deltaY * 0.35;
+			
+			} else {
+		
+			player2score ++; //must be BEFORE ballReset()
+			ballReset();
+			
+			}
+		}
+		
+		if (ballX > canvas.width) {
+		
+			if(ballY > paddle2Y && 
+			ballY < paddle2Y+PADDLE_HEIGHT) {
+			ballSpeedX = -ballSpeedX
+			
+			var deltaY = ballY
+			
+				-(paddle2Y+PADDLE_HEIGHT/2);
+				
+				ballSpeedY = deltaY * 0.35;
+			
+			
+			} else {
+		
+			player1score ++; //must be BEFORE ballReset()
+			ballReset();
+			
+			}
+		
+		
+		}
+		
+		if (ballY < 0) {
+		
+		ballSpeedY = -ballSpeedY;
+		
+		}
+		
+		if (ballY > canvas.height) {
+		
+		ballSpeedY = -ballSpeedY;
+		
+		}
+	
+}
+
+	function drawNet() {
+	
+		for(var i = 0; i < canvas.height; i += 40) {
+		
+		colorRect(canvas.width/2-1, i, 2, 20, 'white');
+			
+		
+		}
+	
+	}
+		
+	function drawEverything() {
+
+	
+	//next  line blanks out the screen with green
+	
+		colorRect(0, 0, canvas.width, canvas.height, 'green');
+		
+		if(showngWinScreen) {
+		
+			canvasContext.fillStyle = 'white';
+		
+			if(player1score >= WINNING_SCORE) {
+			
+			canvasContext.fillText("Left Player Won!", 350, 200);
+		
+		
+			} else if(player2score >= WINNING_SCORE) {
+			
+			canvasContext.fillText("Right Player Won!", 350, 200);
+		
+		
+			}		
+		
+		canvasContext.fillText("click to continue", 350, 500);
+		
+		return;
+	
+	}
+	
+	drawNet();
+		
+	//this is the left player paddle
+		
+		colorRect(0, paddle1Y, PADDLE_THICKNESS, PADDLE_HEIGHT, 'white');
+		
+	//this is the right computer paddle
+		
+		colorRect(canvas.width - PADDLE_THICKNESS, paddle2Y, PADDLE_THICKNESS, PADDLE_HEIGHT, 'white');
+		
+		
+	//next line draws the ball
+		
+		colorCircle(ballX, ballY, 10, 'white');
+		
+		
+		canvasContext.fillText(player1score, 100, 100);
+		
+		canvasContext.fillText(player2score, canvas.width-100, 100);
+		}
+		
+		
+	function colorCircle(centerX, centerY, radius, drawColor) {
+	
+		canvasContext.fillStyle = 'drawColor';
+		canvasContext.beginPath();
+		canvasContext.arc(centerX, centerY, radius, 0, Math.PI*2, true);
+		canvasContext.fill();
+		
+	
+	}
+		
+	function colorRect(leftX, topY, width, height, drawColor) {
+	
+		canvasContext.fillStyle = drawColor;
+		
+		canvasContext.fillRect(leftX, topY, width, height);
+		
+	
+	}
+	
+	</script>
+
 
 </html>
